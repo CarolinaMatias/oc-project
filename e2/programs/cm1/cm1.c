@@ -14,10 +14,10 @@
  * #ifndef also permits small validation runs through compiler -D options.
  */
 #ifndef WORKING_SET_MIN
-#define WORKING_SET_MIN (4ULL * 1024)
+#define WORKING_SET_MIN (64ULL * 1024)
 #endif
 #ifndef WORKING_SET_MAX
-#define WORKING_SET_MAX (1ULL * 1024 * 1024)
+#define WORKING_SET_MAX (64ULL * 1024 * 1024)
 #endif
 /* %%%% This part was added: bounded work and independent samples %%%%
  * TARGET_UPDATES is a target, not a strict cap: use whole passes and at
