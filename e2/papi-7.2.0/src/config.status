@@ -437,7 +437,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/afs/.ist.utl.pt/users/9/5/ist1114295/Documents/oc-project/e2/papi-7.2.0/src'
+ac_pwd='/afs/.ist.utl.pt/users/1/0/ist1114010/oc-project/e2/papi-7.2.0/src'
 srcdir='.'
 AWK='gawk'
 test -n "$AWK" || AWK=awk

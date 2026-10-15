@@ -1,4 +1,4 @@
-event=PAPI_L2_TCM min=65536 max=67108864 target=1048576 min_passes=4 samples=5
+event=PAPI_L2_DCM min=65536 max=67108864 target=1048576 min_passes=4 samples=5
 Array: 65536 bytes
 Array: 131072 bytes
 Array: 262144 bytes
