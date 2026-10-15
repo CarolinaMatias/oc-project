@@ -6,7 +6,7 @@
 
 | Item | Valor |
 |---|---|
-| Processador | 11th Gen Intel Core i5-11500 @ 2.70 GHz (Rocket Lake; 6 núcleos / 12 threads) |
+| Processador | 11th Gen Intel(R) Core(TM) i5-11500 @ 2.70GHz |
 | Sistema operativo | Linux 6.12.40, x86_64 (computador do laboratório, execução nativa) |
 | Compilador | GCC 14.2.1 20250322 |
 | Opções de compilação | `-O2 -std=gnu11 -Wall -Wextra` (valores por omissão do `Makefile`) |
@@ -38,12 +38,11 @@ Para strides pequenos (1–8 B), todas as curvas estão em ≈ 0,6 ns/update. A�
 
 (ns/update, mediana; valores de `e1/L1/cache_table.md`)
 
-As curvas de 4 a 32 KiB ficam todas abaixo de ≈ 0,8 ns até strides de 1 KiB. A curva de 64 KiB salta para o dobro ou mais (1,26 ns a 64 B; 2,51 ns a 512 B) e coincide com as de 128 KiB e 256 KiB. Logo, um array de 32 KiB cabe na L1 e um de 64 KiB já não cabe: a capacidade está no intervalo ]32, 64] KiB. Isto é coerente com o `lscpu` da máquina (288 KiB para 6 núcleos, ou seja, 48 KiB por núcleo).
+As curvas de 4 a 32 KiB ficam todas abaixo de ≈ 0,8 ns até strides de 1 KiB. A curva de 64 KiB salta para o dobro ou mais (1,26 ns a 64 B; 2,51 ns a 512 B) e coincide com as de 128 KiB e 256 KiB. Logo, um array de 32 KiB cabe na L1 e um de 64 KiB já não cabe: a capacidade está no intervalo ]32, 64] KiB.
 
 Notas:
 - O último ponto de cada curva (stride = N/2) sobe para ≈ 1,49 ns em **todos** os tamanhos, incluindo 4 KiB. Não são *misses*: cada passagem faz só 2 atualizações, e o custo fixo do ciclo por passagem domina.
 - Nos strides muito grandes, as curvas de 64 KiB a 1 MiB voltam a descer, porque são acedidas poucas linhas (N/s pequeno) e essas cabem de novo na L1.
-- Já se nota uma subida entre 512 KiB e 1 MiB (por exemplo, 1,43 → 2,18 ns a 64 B), o que indica o próximo nível de cache. Este efeito é estudado na alínea d).
 
 ### d) Capacidade da cache L2
 
@@ -53,20 +52,18 @@ Notas:
 
 **Estimativa: ≈ 0,5 MiB (intervalo ]0,25; 1] MiB).**
 
-| Stride | 64 KiB | 128 KiB | 256 KiB | **512 KiB** | 1 MiB | 2 MiB | 4 MiB | 8 MiB | 16 MiB |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 64 B | 1,28 | 1,27 | 1,25 | **1,67** | 1,93 | 1,95 | 1,95 | 2,01 | 17,34 |
-| 128 B | 1,92 | 1,91 | 1,91 | **2,25** | 3,49 | 3,54 | 3,55 | 3,59 | 20,12 |
-| 512 B | 2,49 | 2,58 | 2,62 | **3,43** | 5,35 | 5,54 | 5,44 | 5,13 | 21,51 |
-| 1 KiB | 2,89 | 2,85 | 2,84 | **3,44** | 5,93 | 6,27 | 6,30 | 6,40 | 10,60 |
+| Stride | 64 KiB | 128 KiB | 256 KiB | **512 KiB** | 1 MiB | 2 MiB | 4 MiB | 8 MiB |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 64 B | 1,28 | 1,27 | 1,25 | **1,67** | 1,93 | 1,95 | 1,95 | 2,01 |
+| 128 B | 1,92 | 1,91 | 1,91 | **2,25** | 3,49 | 3,54 | 3,55 | 3,59 |
+| 512 B | 2,49 | 2,58 | 2,62 | **3,43** | 5,35 | 5,54 | 5,44 | 5,13 |
+| 1 KiB | 2,89 | 2,85 | 2,84 | **3,44** | 5,93 | 6,27 | 6,30 | 6,40 |
 
 (ns/update, mediana; valores de `e1/L2/cache_table.md`)
 
 - Entre 64 e 256 KiB as curvas praticamente coincidem: os dados cabem na L2.
 - A partir de 1 MiB há um novo patamar, sustentado e claramente mais alto (por exemplo, a 128 B: 1,91 → 3,5 ns; a 512 B: 2,6 → 5,4 ns), que se mantém até 8 MiB.
-- 512 KiB fica a meio dos dois patamares. Este array tem exatamente o tamanho da L2 (512 KiB por núcleo, segundo o `lscpu`: 3 MiB / 6) e por isso não cabe todo. A L2 também guarda código, pilha e entradas de tabelas de páginas, a substituição não é LRU perfeita e, como a L2 é indexada por endereço físico, as páginas não se distribuem uniformemente pelos conjuntos.
-
-Vê-se ainda uma terceira transição, muito mais forte, entre 8 MiB e 16 MiB (a 64 B: 2,01 → 17,34 ns). Corresponde ao fim da L3 partilhada (12 MiB) e à passagem para DRAM. As curvas de 16 a 64 MiB têm muito ruído (por exemplo, 16 MiB a 128 B: mínimo 6,15 ns, máximo 27,66 ns). Isso deve-se à memória principal, às falhas de TLB e à partilha da L3 com outros processos.
+- 512 KiB fica a meio dos dois patamares: parte dos dados já não cabe na L2, o que coloca a capacidade perto deste valor. A transição não é abrupta porque a L2 também guarda outros dados (código, pilha, tabelas de páginas) e a substituição não é perfeita.
 
 ### e) Tamanho da linha da L1
 
@@ -116,7 +113,7 @@ Para a L2 usou-se `PAPI_L2_TCM`. Neste processador, `PAPI_L2_DCM` é um evento d
 
 (eventos por atualização, mediana)
 
-Até 32 KiB há praticamente zero eventos (≤ 3e-4 por atualização): depois do aquecimento, todos os acessos são *hits*. Com 64 KiB, a taxa passa para exatamente 1 *miss* por linha acedida. 64 KiB excede a L1 (48 KiB) em apenas 33 %, mas mesmo assim todas as linhas falham. Num varrimento cíclico com substituição do tipo LRU, cada linha é expulsa antes de voltar a ser usada.
+Até 32 KiB há praticamente zero eventos (≤ 3e-4 por atualização): depois do aquecimento, todos os acessos são *hits*. Com 64 KiB, a taxa passa para exatamente 1 *miss* por linha acedida: num varrimento cíclico de um array maior que a cache, cada linha é expulsa antes de voltar a ser usada.
 
 ### c) Capacidade da L2 (`PAPI_L2_TCM`)
 
@@ -136,14 +133,14 @@ Até 32 KiB há praticamente zero eventos (≤ 3e-4 por atualização): depois d
 (eventos por atualização, mediana)
 
 - Até 256 KiB não há falhas na L2 (≤ 1,4e-3).
-- Com 512 KiB, cerca de 40–46 % das linhas falham: o array tem o tamanho exato da L2 e não cabe todo, pelas razões indicadas em 1d).
+- Com 512 KiB, cerca de 40–46 % das linhas falham: parte do array já não cabe na L2, pelas razões indicadas em 1d).
 - A partir de 1 MiB, todas as linhas falham (1 evento por linha a 64 B).
 
-O intervalo cobre os dois lados da transição. Como era de esperar, não aparece nenhuma transição da L3: o evento mede falhas na L2, e a L3 só mudaria o custo dessas falhas, não o seu número.
+O intervalo cobre os dois lados da transição.
 
 ### d) Tamanho da linha da L1
 
-**Array escolhido: 128 KiB** (maior que a L1, de 48 KiB, e menor que a L2, de 512 KiB). Os resultados confirmam-se com 256 KiB e 64 KiB.
+**Array escolhido: 128 KiB** (maior que a L1 estimada, ]32, 64] KiB, e menor que a L2 estimada, ≈ 0,5 MiB). Os resultados confirmam-se com 256 KiB e 64 KiB.
 
 | Stride s | 1 | 2 | 4 | 8 | 16 | 32 | **64** | 128 | 256 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -169,15 +166,6 @@ O intervalo cobre os dois lados da transição. Como era de esperar, não aparec
   - `L1D:REPLACEMENT` conta todas as linhas substituídas na L1, incluindo as trazidas pelos *prefetchers* da L1 (por exemplo, a linha seguinte, que nunca é usada) e as entradas de tabelas de páginas lidas nos *page walks*. Com strides ≥ 4 KiB, cada atualização toca uma página diferente: um array de 1 MiB tem 256 páginas, mais do que a DTLB consegue cobrir.
   - `LLC_REFERENCES` conta todos os pedidos do núcleo à L3, incluindo pedidos especulativos e pedidos dos *prefetchers* da L1, e exclui só os *prefetches* da L2. A descida para ≈ 1,2 a partir de strides de 4 KiB é compatível com o facto de os *prefetchers* não atravessarem fronteiras de página de 4 KiB.
   - Por isso, as capacidades e a linha foram estimadas na zona de strides pequenos e moderados (≤ 256 B), onde a contagem segue o modelo de um *miss* por linha.
-- **Descidas nos strides muito grandes.** Nestes strides acede-se a muito poucas linhas. Mostram também a associatividade da L1. Com strides múltiplos de 4 KiB (= 64 conjuntos × 64 B), todas as linhas caem no mesmo conjunto:
-  - com 16 linhas (64 KiB/4 KiB, 128 KiB/8 KiB, 256 KiB/16 KiB, 512 KiB/32 KiB e 1 MiB/64 KiB) há 0,60–0,68 eventos por atualização;
-  - com 8 linhas (64 KiB/8 KiB, 128 KiB/16 KiB, …) há ≈ 0.
-
-  A associatividade está portanto entre 8 e 16 vias, o que é coerente com uma L1 de 48 KiB e 12 vias. O mesmo efeito vê-se nos tempos (64 KiB: 3,14 ns a stride 4 KiB contra 1,21 ns a stride 8 KiB). Com 16 linhas num conjunto de 12 vias, uma substituição LRU pura daria 1 *miss* por acesso. O valor medido de ≈ 0,65 indica uma política pseudo-LRU ou adaptativa.
+- **Descidas nos strides muito grandes.** Nestes strides acede-se a muito poucas linhas (N/s pequeno), que voltam a caber na cache entre passagens. Por isso estes pontos não foram usados nas estimativas.
 - **Valor intermédio em 512 KiB.** A L2 é indexada fisicamente e partilhada com código, pilha e tabelas de páginas, por isso não é possível dizer exatamente em que tamanho a transição ocorre. Daí a estimativa por intervalo.
-- **Ruído do sistema.** O computador do laboratório é partilhado. Nas medições de tempo de arrays ≥ 16 MiB há uma grande variação entre amostras. Os contadores são muito menos sensíveis a isto, porque contam apenas eventos em modo utilizador da região medida.
-
-### Arquivos de entrega
-
-- `entregas/ex1_L1_L2.zip`: `L1/` e `L2/`, cada um com `results.csv`, `cache_table.md` e `cache_time.png`.
-- `entregas/ex2_L1_L2.zip`: `L1/` e `L2/`, cada um com `results.csv`, `cache_table.md`, `cache_misses.png` e `event_details.txt`.
+- **Ruído do sistema.** O computador do laboratório é partilhado. Nas medições de tempo dos arrays maiores há uma grande variação entre amostras. Os contadores são muito menos sensíveis a isto, porque contam apenas eventos em modo utilizador da região medida.
